@@ -91,4 +91,60 @@ export class Touchscreen implements api.Touchscreen {
   async tap(x: number, y: number) {
     await this._page._channel.touchscreenTap({ x, y });
   }
+
+  /**
+   * Dispatches a `touchstart` event.
+   *
+   * **NOTE** Most of the time, you should use [touchscreen.tapAndDrag(startX, startY, endX, endY[, options])](https://playwright.dev/docs/api/class-touchscreen#touchscreen-tap-and-drag) instead.
+   */
+  async down(x: number, y: number) {
+    await this._page._channel.touchscreenDown({ x, y });
+  }
+
+  /**
+   * Dispatches a `touchmove` event.
+   *
+   * **NOTE** Most of the time, you should use [touchscreen.tapAndDrag(startX, startY, endX, endY[, options])](https://playwright.dev/docs/api/class-touchscreen#touchscreen-tap-and-drag) instead.
+   */
+  async move(x: number, y: number) {
+    await this._page._channel.touchscreenMove({ x, y });
+  }
+
+  /**
+   * Dispatches a `touchend` event.
+   *
+   * **NOTE** Most of the time, you should use [touchscreen.tapAndDrag(startX, startY, endX, endY[, options])](https://playwright.dev/docs/api/class-touchscreen#touchscreen-tap-and-drag) instead.
+   */
+  async up(x: number, y: number) {
+    await this._page._channel.touchscreenUp({ x, y });
+  }
+
+  /**
+   * Performs a tap and drag gesture by dispatching `touchstart`, multiple `touchmove`, and `touchend` events.
+   *
+   * **Usage**
+   *
+   * ```js
+   * await page.touchscreen.tapAndDrag(100, 100, 200, 200);
+   * ```
+   */
+  async tapAndDrag(startX: number, startY: number, endX: number, endY: number, options: { steps?: number } = {}) {
+    await this._page._wrapApiCall(async () => {
+      const steps = options.steps ?? 10;
+
+      // Start touch
+      await this.down(startX, startY);
+
+      // Move in steps to simulate smooth drag
+      for (let i = 1; i <= steps; i++) {
+        const progress = i / steps;
+        const x = startX + (endX - startX) * progress;
+        const y = startY + (endY - startY) * progress;
+        await this.move(x, y);
+      }
+
+      // End touch
+      await this.up(endX, endY);
+    }, { title: 'Tap and drag' });
+  }
 }
